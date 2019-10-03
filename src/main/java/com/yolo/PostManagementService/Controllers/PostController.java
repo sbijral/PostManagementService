@@ -40,10 +40,21 @@ public class PostController {
     @PostMapping("/addPost")
     public DeferredResult<ApiResponse<Post>> savePost(@RequestBody Post postBody)
 	{
+    	boolean moderationFlag=false;
 		postBody.setPostId(UUID.randomUUID().toString());
 		ApiResponse<Post> result = new ApiResponse<Post>();
 		DeferredResult<ApiResponse<Post>> defResult = new DeferredResult<>();
 		// Check the Moderation flag and decide
+		if (moderationFlag)
+		{
+			postBody.setStatus(PostStatus.PENDING_APPROVAL);
+			}
+		
+		else
+		{
+			postBody.setStatus(PostStatus.APPROVED);
+		}
+			
 		postRepository.insert(postBody).doOnError(error -> {
 			result.setStatus(HttpStatus.NOT_MODIFIED);
 			result.setMessage("Not ABle to Add the user " + error);
@@ -227,16 +238,16 @@ public class PostController {
 	}
     
     @PutMapping("/post/{postId}/follow/{userId}")
-    public DeferredResult<ApiResponse<Post>> addFollower(@PathVariable String postId, @PathVariable String userId)
+    public DeferredResult<ApiResponse<Void>> addFollower(@PathVariable String postId, @PathVariable String userId)
 
 	{
 		
-		ApiResponse<Post> result = new ApiResponse<Post>();
-		DeferredResult<ApiResponse<Post>> defResult = new DeferredResult<>();
+		ApiResponse<Void> result = new ApiResponse<>();
+		DeferredResult<ApiResponse<Void>> defResult = new DeferredResult<>();
 		
 		mongoPostService.addFollower(postId,userId)
 		.doOnNext(post -> {
-			result.setResponseObject(post);
+			//result.setResponseObject(post);
 			result.setStatus(HttpStatus.OK);
 			defResult.setResult(result);
 			solrService.updateinSolr(postId, userId);
