@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
+import com.yolo.PostManagementService.enums.PostStatus;
 import com.yolo.PostManagementService.repositories.api.PostRepository;
 import com.yolo.PostManagementService.resources.Post;
 
@@ -117,6 +118,20 @@ public class MongoPostService {
 			List<String> followers = post.getPostFollowers();
 			followers.remove(userId);
 			post.setLikerIds(followers);
+			postRepo.save(post).retry().subscribe();
+		}
+
+		).subscribe();
+		Mono<Post> postMono = postRepo.findById(postId);
+		return postMono;
+	}
+	
+	
+	public Mono<Post> closePost(String postId) {
+		// TODO Auto-generated method stub
+
+		postRepo.findById(postId).doOnNext(post -> {
+			post.setStatus(PostStatus.CLOSED);
 			postRepo.save(post).retry().subscribe();
 		}
 

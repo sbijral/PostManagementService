@@ -139,25 +139,30 @@ public class PostController {
 	}
     
     @PutMapping("/post/{postId}/closePost")
-    public DeferredResult<ApiResponse<Post>> closePost(@PathVariable String postId)
+    public DeferredResult<ApiResponse<Void>> closePost(@PathVariable String postId)
 	{
 
-		ApiResponse<Post> result = new ApiResponse<Post>();
-		DeferredResult<ApiResponse<Post>> defResult = new DeferredResult<>();
-		Mono<Post> postMono = postRepository.findById(postId);
-		Post post = (Post) postMono.subscribe();
-		post.setStatus(PostStatus.CLOSED);
-		postRepository.save(post).doOnNext(postResponse -> {
+		ApiResponse<Void> result = new ApiResponse<Void>();
+		DeferredResult<ApiResponse<Void>> defResult = new DeferredResult<>();
+		mongoPostService.closePost(postId)
+		.doOnNext(post ->
+		{
+			
+			//result.setResponseObject(comment);
 			result.setStatus(HttpStatus.OK);
 			defResult.setResult(result);
+			
 		}
-
-		).doOnError(error -> {
+				
+				)
+		.doOnError(error -> {
 			result.setStatus(HttpStatus.NOT_MODIFIED);
 			result.setMessage("Not able to close the Post " + error);
 			result.setDebugMessage(error.getCause().toString());
 			defResult.setResult(result);
 		}).subscribe();
+	
+		
 
 		return defResult;
 
@@ -188,16 +193,16 @@ public class PostController {
 //	}
     
     @PostMapping("/post/{postId}/like/{userId}")
-    public DeferredResult<ApiResponse<Post>> addLike(@PathVariable String postId, @PathVariable String userId)
+    public DeferredResult<ApiResponse<Void>> addLike(@PathVariable String postId, @PathVariable String userId)
 
 	{
 		
-		ApiResponse<Post> result = new ApiResponse<Post>();
-		DeferredResult<ApiResponse<Post>> defResult = new DeferredResult<>();
+		ApiResponse<Void> result = new ApiResponse<Void>();
+		DeferredResult<ApiResponse<Void>> defResult = new DeferredResult<>();
 		
 		mongoPostService.incrementLikeCount(postId,userId)
 		.doOnNext(post -> {
-			result.setResponseObject(post);
+			//result.setResponseObject(post);
 			result.setStatus(HttpStatus.OK);
 			defResult.setResult(result);
 			solrService.updateinSolr(postId, userId);
@@ -213,16 +218,16 @@ public class PostController {
 	}
     
     @PostMapping("/post/{postId}/unlike/{userId}")
-    public DeferredResult<ApiResponse<Post>> decreaseLike(@PathVariable String postId,@PathVariable String userId)
+    public DeferredResult<ApiResponse<Void>> decreaseLike(@PathVariable String postId,@PathVariable String userId)
 
 	{
 		
-		ApiResponse<Post> result = new ApiResponse<Post>();
-		DeferredResult<ApiResponse<Post>> defResult = new DeferredResult<>();
+		ApiResponse<Void> result = new ApiResponse<Void>();
+		DeferredResult<ApiResponse<Void>> defResult = new DeferredResult<>();
 		
 		mongoPostService.decrementLikeCount(postId,userId)
 		.doOnNext(post -> {
-			result.setResponseObject(post);
+			//result.setResponseObject(post);
 			result.setStatus(HttpStatus.OK);
 			defResult.setResult(result);
 			solrService.updateinSolr(postId, userId);
@@ -263,16 +268,16 @@ public class PostController {
 	}
     
     @PutMapping("/post/{postId}/unfollow/{userId}")
-    public DeferredResult<ApiResponse<Post>> removeFollower(@PathVariable String postId, @PathVariable String userId)
+    public DeferredResult<ApiResponse<Void>> removeFollower(@PathVariable String postId, @PathVariable String userId)
 
 	{
 		
-		ApiResponse<Post> result = new ApiResponse<Post>();
-		DeferredResult<ApiResponse<Post>> defResult = new DeferredResult<>();
+		ApiResponse<Void> result = new ApiResponse<Void>();
+		DeferredResult<ApiResponse<Void>> defResult = new DeferredResult<>();
 		
 		mongoPostService.decrementFollower(postId, userId)
 		.doOnNext(post -> {
-			result.setResponseObject(post);
+		//	result.setResponseObject(post);
 			result.setStatus(HttpStatus.OK);
 			defResult.setResult(result);
 			solrService.updateinSolr(postId, userId);
